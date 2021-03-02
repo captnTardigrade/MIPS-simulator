@@ -6,4 +6,4 @@ matches = string_pattern.finditer(f.read())
 
 for match in matches:
     if match:
-        print(match.group(3).strip())
+        print(match.group(2).strip())
