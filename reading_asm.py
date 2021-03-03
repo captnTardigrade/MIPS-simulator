@@ -3,13 +3,20 @@ import re
 ## primitive data types
 primitives = (".asciiz", ".word", ".byte")
 
-## variable pattern
+## matches variables using the following pattern
 var_pattern = re.compile(r'(\w+:)\s*(\.[a-z]+)\s*(.+\s)')
+
+## matches labels with along with instructions
+label_pattern = re.compile(r"(\w+:)(\s*([^.][a-z]{2,3})\s*((\$[a-z0-9]{2},?\s*)|\w+[^:])(((\$[a-z0-9]{2},?\s*){2,3})|.*)+)+")
+
+path = r"./hello_world.asm"
 
 def fillData(path):
     '''
-        extracts variables and fills
-        data
+        extracts variables and stores them in
+        a dictionary with variable names as keys
+
+        returns the dictionary
     '''
     f = open(r'{}'.format(path), "r")
     data = {}
@@ -28,5 +35,24 @@ def fillData(path):
     
     return data
 
-data = fillData("./hello_world.asm")
-print(data)
+def fillInstructions(path):
+    '''
+        stores the instructions present in a label
+        in a dictionary of labels as keys and list of instructions
+        as values
+        
+        returns the dictionary
+    '''
+    f = open(r"{}".format(path), "r")
+    instructions = {}
+    matches = label_pattern.finditer(f.read())
+    for match in matches:
+        if match:
+            label = match.group(1)[:-1]
+            instructionList = [i.strip() for i in match.group().split("\n")[1:] if i.strip()]
+            instructions[label] = instructionList
+    
+    return instructions
+
+instructions = fillInstructions(path)
+data = fillData(path)
