@@ -10,7 +10,7 @@ var_pattern = re.compile(r'(\w+:)\s*(\.[a-z]+)\s*(.+\s)')
 label_pattern = re.compile(
     r"(\w+:)(\s*([^.][a-z]{2,3})\s*((\$[a-z0-9]{2},?\s*)|\w+[^:])(((\$[a-z0-9]{2},?\s*){2,3})|.*)+)+")
 
-path = r"./hello_world.asm"
+path = r"./instructionTest.asm"
 
 
 def getData(path):
@@ -57,7 +57,3 @@ def getInstructions(path):
             instructions[label] = instructionList
 
     return instructions
-
-
-instructions = getInstructions(path)
-data = getData(path)
