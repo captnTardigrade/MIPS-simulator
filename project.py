@@ -1,10 +1,11 @@
 import collections
+
 command = input()
 reg = [1, 2, 3]
 mem = [0, 1, 2, 3, 4]
 
 # add $r1, $r2, $r3
-# 
+#
 # instruction = ["add", "$r1", "$r2", "$r3"]
 # command[:3], command[3:].split(',')
 
@@ -54,6 +55,3 @@ def arithmatic(command):
 # R[d["s"][0]]
 # [17, 18, 19, ]
 # register = "$s7" -> reg[d[register[1]][int(register[-1])]]
-
-
-

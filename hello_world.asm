@@ -1,6 +1,6 @@
 .data
-hello_world: 
-	.asciiz "hello world\n"
+	hello_world: 
+		.asciiz "hello world\n"
 .text
 .globl main
 main:
