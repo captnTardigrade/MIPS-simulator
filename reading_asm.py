@@ -8,7 +8,7 @@ var_pattern = re.compile(r'(\w+:)\s*(\.[a-z]+)\s*(.+\s)')
 
 # matches labels with along with instructions
 label_pattern = re.compile(
-    r"(\w+:)(\s*([^.][a-z]{2,3})\s*((\$[a-z0-9]{2},?\s*)|\w+[^:])(((\$[a-z0-9]{2},?\s*){2,3})|.*)+)+")
+    r"(\w+:)\s*(\s*([^.][a-z]{2,3})\s*((\$[a-z0-9]{2},?\s*)|\.+[^:])(((\$[a-z0-9]{2},?\s*){2,3})|.*)+)+")
 
 path = r"./instructionTest.asm"
 

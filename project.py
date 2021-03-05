@@ -55,3 +55,11 @@ def arithmatic(command):
 # R[d["s"][0]]
 # [17, 18, 19, ]
 # register = "$s7" -> reg[d[register[1]][int(register[-1])]]
+
+
+# bne, beq, jump, or/and
+# bne $s1, 0, foo
+# if instruction[:3] == "bne":
+#   args = [i.strip() for i in instruction[3:].split(",")]
+#   if accessRegister(args[0]) != accesssRegister(args[1]):
+#       runInstruction(instructions["foo"])
