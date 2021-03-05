@@ -10,4 +10,4 @@ Kranthi CS19B036
 
 Suman CS19B039
 
-Sai Kritik CS19B024
+Sai Krithik CS19B024
