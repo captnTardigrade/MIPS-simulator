@@ -11,7 +11,7 @@ memPointer = 0
 registers = [0]*REGISTER_SIZE
 memory = [0]*MEMORY_SIZE
 
-path = r"./instructionTest.asm"
+path = r"./hello_world.asm"
 
 '''
 d = {"class of register":[indices],"v":[2,3],"s":[17...23]}
@@ -30,9 +30,15 @@ instructions = getInstructions(path)
 
 # storing variables in memory
 for key, value in data.items():
-    memory[memPointer] = value
-    data[key] = memPointer
-    memPointer += 1
+    if type(value) == list:
+        data[key] = memPointer
+        for i in value:
+            memory[memPointer] = i
+            memPointer += 1
+    else:
+        memory[memPointer] = value
+        data[key] = memPointer
+        memPointer += 1
 
 
 def accessRegister(r):
@@ -44,34 +50,68 @@ def modifyRegister(r, value):
 
 
 def runInstruction(instruction):
+    
     if instruction[:3] == "add":
         args = [i.strip() for i in instruction[3:].split(",")]
-        srcOne = accessRegister(args[1])
+        try:
+            srcOne = accessRegister(args[1])
+        except:
+            if (args[1][:2] == "0x"):
+                srcOne = int(args[1], base=16)
+            else:
+                srcOne = int(args[1])
         try:
             srcTwo = accessRegister(args[2])
         except:
-            srcTwo = int(args[2], 16)
+            if (args[2][:2] == "0x"):
+                srcTwo = int(args[2], base=16)
+            else:
+                srcTwo = int(args[2])
         res = srcOne + srcTwo
         modifyRegister(args[0], res)
 
     elif instruction[:3] == "sub":
         args = [i.strip() for i in instruction[3:].split(",")]
-        srcOne = accessRegister(args[1])
+        try:
+            srcOne = accessRegister(args[1])
+        except:
+            if (args[1][:2] == "0x"):
+                srcOne = int(args[1], base=16)
+            else:
+                srcOne = int(args[1])
         try:
             srcTwo = accessRegister(args[2])
         except:
-            srcTwo = int(args[2])
-        res = srcOne - srcTwo
+            if (args[2][:2] == "0x"):
+                srcTwo = int(args[2], base=16)
+            else:
+                srcTwo = int(args[2])
+        res = srcOne + srcTwo
         modifyRegister(args[0], res)
-
+    
     elif instruction[:2] == "lw":
         args = [i.strip() for i in instruction[2:].split(",")]
-        src = accessRegister(args[1][2:5])  # contains index of memory
-        modifyRegister(args[0], memory[int(args[1][0])//4+src])
+        if "($" in args[1]:
+            src = accessRegister(args[1][-4:-1])  # contains index of memory
+            modifyRegister(args[0], memory[int(args[1][:-5])//4+src])
+        else:
+            try:
+                modifyRegister(args[0], memory[data[args[1]]])            
+            except KeyError:
+                print("Variable does not exist")
 
+    elif instruction[:2] == "sw":
+        args = [i.strip() for i in instruction[2:].split(",")]
+        print("args = ", args)
+        if "($" in args[1]:
+            src = accessRegister(args[1][-4:-1])  # contains index of memory
+            memory[int(args[1][:-5])//4+src] = accessRegister(args[0])
+        else:
+            try:
+                memory[data[args[1]]] = accessRegister(args[0])            
+            except KeyError:
+                print("Variable does not exist")
+        
 def runFile():
     for instruction in instructions["main"]:
         runInstruction(instruction)
-
-runFile()
-print(registers)
