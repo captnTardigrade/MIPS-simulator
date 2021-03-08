@@ -2,7 +2,8 @@
 
 # Known issues
 
-1. `getData` cannot store unnamed variables
+1. `getData` in reading_asm.py cannot store unnamed variables
+2. Unknown issue with `label_pattern` in reading_asm.py
 
 # Team 101010
 
