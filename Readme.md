@@ -3,7 +3,7 @@
 # Known issues
 
 1. `getData` in reading_asm.py cannot store unnamed variables
-2. Unknown issue with `label_pattern` in reading_asm.py
+2. `runFile` [in main.py](https://github.com/captnTardigrade/MIPS-simulator/blob/0e31bcc8ae7d9db53958e1d1661f7288fa57c5cc/main.py#L133) needs some change
 
 # Team 101010
 
