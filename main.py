@@ -11,7 +11,7 @@ memPointer = 0
 registers = [0]*REGISTER_SIZE
 memory = [0]*MEMORY_SIZE
 
-path = r"./hello_world.asm"
+path = r"./instructionTest.asm"
 
 '''
 d = {"class of register":[indices],"v":[2,3],"s":[17...23]}
@@ -102,7 +102,6 @@ def runInstruction(instruction):
 
     elif instruction[:2] == "sw":
         args = [i.strip() for i in instruction[2:].split(",")]
-        print("args = ", args)
         if "($" in args[1]:
             src = accessRegister(args[1][-4:-1])  # contains index of memory
             memory[int(args[1][:-5])//4+src] = accessRegister(args[0])
@@ -111,7 +110,28 @@ def runInstruction(instruction):
                 memory[data[args[1]]] = accessRegister(args[0])            
             except KeyError:
                 print("Variable does not exist")
-        
-def runFile():
-    for instruction in instructions["main"]:
+
+    elif instruction[:3] == "bne":
+        args = [i.strip() for i in instruction[3:].split(",")]
+        if accessRegister(args[0]) != accessRegister(args[1]):
+            for i in instructions[args[2]]:
+                runInstruction(i)
+
+    elif instruction[:3] == "beq":
+        args = [i.strip() for i in instruction[3:].split(",")]
+        if accessRegister(args[0]) == accessRegister(args[1]):
+            for i in instructions[args[2]]:
+                runInstruction(i)
+
+    elif instruction.split()[0] == "j":
+        for i in instructions[instruction.split()[1]]:
+            runInstruction(i)
+
+def runLabel(label):
+    for instruction in instructions[label]:
         runInstruction(instruction)
+def runFile():
+    for label in instructions.keys():
+        runLabel(label)
+runFile()
+print(registers)

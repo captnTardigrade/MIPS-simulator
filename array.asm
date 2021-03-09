@@ -4,4 +4,6 @@ array:
 .text
 .globl main
 main:
-	jr $ra 
+	lw $s1  , 0($s0)
+	add $s3, $s1, $s2
+	lw $s1, numOne

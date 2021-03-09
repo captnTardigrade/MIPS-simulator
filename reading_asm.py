@@ -8,7 +8,7 @@ var_pattern = re.compile(r'(\w+:)\s*(\.[a-z]+)\s*(.+\s)')
 
 # matches labels with along with instructions
 label_pattern = re.compile(
-    r"(\w+:)\s*(\s*([^.][a-z]{2,3})\s*((\$[a-z0-9]{2},?\s*)|\.+[^:])(((\$[a-z0-9]{2},?\s*){2,3})|.*)+)+")
+    r"(\w+:(?!\s*\.))(\s*\w{2,3}\s*(\$[a-z0-9]{2}\s*,?\s*)*([^\n]*))*")
 
 path = r"./instructionTest.asm"
 
@@ -46,14 +46,19 @@ def getInstructions(path):
 
         returns the dictionary
     '''
-    f = open(r"{}".format(path), "r")
-    instructions = {}
+    f = open(path, "r") # instructionTest.asm refers to the above asm code
     matches = label_pattern.finditer(f.read())
+    l = []
     for match in matches:
         if match:
-            label = match.group(1)[:-1]
-            instructionList = [i.strip()
-                               for i in match.group().split("\n")[1:] if i.strip()]
-            instructions[label] = instructionList
+            l.extend([i.strip() for i in match.group().split("\n") if i.strip()])
+    instructions = {}
+    for i in range(len(l)):
+        if ":" in l[i]:
+            instructions[l[i][:-1]] = []
+            j = i + 1
+            while j < len(l) and (not ":" in l[j]):
+                instructions[l[i][:-1]].append(l[j])
+                j += 1
 
     return instructions
