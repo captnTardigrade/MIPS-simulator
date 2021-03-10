@@ -11,7 +11,7 @@ memPointer = 0
 registers = [0]*REGISTER_SIZE
 memory = [0]*MEMORY_SIZE
 
-path = r"./instructionTest.asm"
+path = r"./bubbleSort.asm"
 
 '''
 d = {"class of register":[indices],"v":[2,3],"s":[17...23]}
@@ -126,6 +126,18 @@ def runInstruction(instruction):
     elif instruction.split()[0] == "j":
         for i in instructions[instruction.split()[1]]:
             runInstruction(i)
+
+    elif instruction[:3] == "bge":
+        args = [i.strip() for i in instruction[3:].split(",")]
+        if accessRegister(args[0]) >= accessRegister(args[1]):
+            for i in instructions[args[2]]:
+                runInstruction(i)
+
+    elif instruction[:3] == "ble":
+        args = [i.strip() for i in instruction[3:].split(",")]
+        if accessRegister(args[0]) <= accessRegister(args[1]):
+            for i in instructions[args[2]]:
+                runInstruction(i)
 
 def runLabel(label):
     for instruction in instructions[label]:
