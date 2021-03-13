@@ -3,11 +3,9 @@
 # Known issues
 
 1. `getData` in reading_asm.py cannot store unnamed variables
-2. `runFile` [in main.py](https://github.com/captnTardigrade/MIPS-simulator/blob/0e31bcc8ae7d9db53958e1d1661f7288fa57c5cc/main.py#L133) needs some change
 
 # To-do
-- [ ] Update runFile to run the file correctly
-- [ ] Create bubble_sort.asm
+- [ ] Create functions to replicate the functionality of a GUI
 
 # Team 101010
 
