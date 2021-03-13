@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 
 # primitive data types
 primitives = (".asciiz", ".word", ".byte")
@@ -21,7 +22,7 @@ def getData(path):
         returns the dictionary
     '''
     f = open(r'{}'.format(path), "r")
-    data = {}
+    data = OrderedDict()
     matches = var_pattern.finditer(f.read())
     for match in matches:
         if match:
@@ -52,7 +53,7 @@ def getInstructions(path):
     for match in matches:
         if match:
             l.extend([i.strip() for i in match.group().split("\n") if i.strip()])
-    instructions = {}
+    instructions = OrderedDict()
     for i in range(len(l)):
         if ":" in l[i]:
             instructions[l[i][:-1]] = []

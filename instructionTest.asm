@@ -1,14 +1,17 @@
 .data
-    numOne: .word 10
+    numOne: .word 20
 
     numTwo: 
-        .word 20
+        .word 10
 .text
 .globl main
 main:
-    add $s1, 3, 0
-    add $s2, 1, 0
+    lw $s1, numOne
+    lw $s2, numTwo
+    bne $s1, $s2, addThree
+
 foo:
-    add $s7, 10, 0
-end:
-    
+    add $s2, $s2, -10
+
+addThree:
+    add $s3, $s1, $s2

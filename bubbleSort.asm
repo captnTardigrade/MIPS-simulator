@@ -34,4 +34,4 @@ inner_end:
         addi     $t3, $t3, -1								 
         j       outer
 outer_end:
-	jr      $ra
+	jr      $ra	
