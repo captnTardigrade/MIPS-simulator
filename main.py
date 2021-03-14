@@ -259,6 +259,20 @@ def reinitialize():
     # path to the asm file
     path = r"{}".format(input("Enter the path to the asm file: "))
 
+def printRegister():
+
+   for x in range(len(namedRegistersList)):
+
+        print(namedRegistersList[x],registers[x])
+
+def printMemory():
+   i=0
+   a=2000
+
+   while i<=memPointer:
+    print(a+i,memory[i])
+    i=i+4;
+
 
 def showMemorySegment(start, end):
     '''
@@ -274,6 +288,7 @@ while True:
     print("To run the file, enter 2")
     print("To show the registers, enter 3")
     print("To show the memory segment, enter 4")
+    print("To show the memory segment from given start to end, enter 5")
     print("To exit, press enter any other number")
     command = int(input("Enter the command: "))
 
@@ -284,8 +299,12 @@ while True:
         runFile()
         print("\nRun successful")
     elif command == 3:
-        print(registers)
+        print("-----------------------------------REGISTER--------------------------------------")
+        printRegister()
     elif command == 4:
+        print("-----------------------------------MEMORY----------------------------------------")
+        printMemory()
+    elif command == 5:
         start, end = map(int, input(
             "Enter start and end indices of the segment to be printed seperated by a space: ").split())
         showMemorySegment(start, end)
