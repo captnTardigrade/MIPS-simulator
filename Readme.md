@@ -3,9 +3,7 @@
 # Known issues
 
 1. `getData` in reading_asm.py cannot store unnamed variables
-
-# To-do
-- [ ] Create functions to replicate the functionality of a GUI
+2. Support for comments is not added yet
 
 # Team 101010
 
