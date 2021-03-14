@@ -14,6 +14,7 @@ memory = [0]*MEMORY_SIZE
 
 # path to the asm file
 path = r"{}".format(input("Enter the path to the asm file: "))
+''' path = r"./bubbleSort.asm" '''
 
 '''
 namedRegisters design:
@@ -25,6 +26,8 @@ namedRegisters design:
 '''
 namedRegisters = {"r0": 0, "at": 1, "v": [2, 3], "a": [4, 5, 6, 7], "t": [8, 9, 10, 11, 12, 13, 14, 15, 24, 25], "s": [
     16, 17, 18, 19, 20, 21, 22, 23, 30], "k": [26, 27], "gp": 28, "sp": 29, "ra": 31}
+
+namedRegistersList = ["r0", "at", "v0","v1", "a0","a1","a2","a3", "t0","t1","t2","t3","t4","t5","t6","t7","s0","s1","s2","s3","s4","s5","s6","s7","t8","t9","k0","k1","gp", "sp","s8","ra"]
 
 data = getData(path)
 instructions = getInstructions(path)
@@ -246,3 +249,25 @@ def runFile():
     global pc
     while memory[pc] != 0:
         runInstruction(memory[pc])
+
+def printRegister():
+
+   for x in range(len(namedRegistersList)):
+        print(namedRegistersList[x],registers[x])
+
+def printMemory():
+   i=0
+   a=2000
+
+   while i<=memPointer:
+    print(a+i,memory[i])
+    i=i+4;
+
+# -------------------------RUN AND PRINT-------------------------- #
+
+runFile()
+print("-----------------------------------REGISTER--------------------------------------")
+printRegister()
+print("-----------------------------------MEMORY----------------------------------------")
+printMemory()
+
