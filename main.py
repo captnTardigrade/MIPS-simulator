@@ -4,8 +4,8 @@ from reading_asm import getData, getInstructions
 # Global constants
 REGISTER_SIZE = 32
 MEMORY_SIZE = 4000
-
 BASE = 2000
+
 pc = BASE
 memPointer = 0
 
@@ -19,15 +19,12 @@ path = r"{}".format(input("Enter the path to the asm file: "))
 '''
 namedRegisters design:
     d = {"class of register":[indices],"v":[2,3],"s":[17...23]}
-    R[d["v"][0]]
-    R[d["s"][0]]
-    [17, 18, 19, ]
-    register = "$s7" -> reg[d[register[1]][int(register[-1])]]
 '''
 namedRegisters = {"r0": 0, "at": 1, "v": [2, 3], "a": [4, 5, 6, 7], "t": [8, 9, 10, 11, 12, 13, 14, 15, 24, 25], "s": [
     16, 17, 18, 19, 20, 21, 22, 23, 30], "k": [26, 27], "gp": 28, "sp": 29, "ra": 31}
 
-namedRegistersList = ["r0", "at", "v0","v1", "a0","a1","a2","a3", "t0","t1","t2","t3","t4","t5","t6","t7","s0","s1","s2","s3","s4","s5","s6","s7","t8","t9","k0","k1","gp", "sp","s8","ra"]
+namedRegistersList = ["r0", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5",
+                      "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra"]
 
 data = getData(path)
 instructions = getInstructions(path)
@@ -250,24 +247,49 @@ def runFile():
     while memory[pc] != 0:
         runInstruction(memory[pc])
 
-def printRegister():
 
-   for x in range(len(namedRegistersList)):
-        print(namedRegistersList[x],registers[x])
+def reinitialize():
+    global pc, memPointer, registers, memory, path
+    pc = BASE
+    memPointer = 0
 
-def printMemory():
-   i=0
-   a=2000
+    registers = [0]*REGISTER_SIZE
+    memory = [0]*MEMORY_SIZE
 
-   while i<=memPointer:
-    print(a+i,memory[i])
-    i=i+4;
+    # path to the asm file
+    path = r"{}".format(input("Enter the path to the asm file: "))
 
-# -------------------------RUN AND PRINT-------------------------- #
 
-runFile()
-print("-----------------------------------REGISTER--------------------------------------")
-printRegister()
-print("-----------------------------------MEMORY----------------------------------------")
-printMemory()
+def showMemorySegment(start, end):
+    '''
+    Prints a segment of the memory within the given indices. start is included and end is excluded
+    parameters: (int) start, (int) end
+    returns: None
+    '''
+    print(memory[start:end+1])
 
+
+while True:
+    print("\nTo reinitialize, enter 1")
+    print("To run the file, enter 2")
+    print("To show the registers, enter 3")
+    print("To show the memory segment, enter 4")
+    print("To exit, press enter any other number")
+    command = int(input("Enter the command: "))
+
+    if command == 1:
+        reinitialize()
+        print("\nReinitialize successful")
+    elif command == 2:
+        runFile()
+        print("\nRun successful")
+    elif command == 3:
+        print(registers)
+    elif command == 4:
+        start, end = map(int, input(
+            "Enter start and end indices of the segment to be printed seperated by a space: ").split())
+        showMemorySegment(start, end)
+    else:
+        break
+
+    print("-"*50)
