@@ -1,4 +1,7 @@
-# Phase 1
+# Phase 2
+
+# To-do
+- [ ] update `getInstructions`
 
 # Known issues
 
