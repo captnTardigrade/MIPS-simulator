@@ -1,10 +1,12 @@
+
+
 instructions = [i for i in range(1, 5)]
 
 
 class Module:
     def __init__(self):
         self.state = False
-        self.instruction = 0
+        self.instruction = None
 
 
 # Module Initialization
@@ -16,6 +18,7 @@ modules = [If, Id, Ex, Mem, Wb]
 
 # Initializing IF with the first instruction
 If.instruction = instructions[0]
+If.state = True
 
 
 def getNextInstruction(previousInstruction):
@@ -39,22 +42,27 @@ def nextState(nextInstruction):
         Updates the states of modules to the states
         the next clock cycle
     '''
-
+    global modules
     Wb.state = False
-    if (Wb.state == False and Mem.state == False):
+    if (Wb.state == False and Mem.state == True):
         Wb.instruction = Mem.instruction
+        Wb.state = True
         Mem.state = False
-    if (Mem.state == False and Ex.state == False):
+    if (Mem.state == False and Ex.state == True):
         Mem.instruction = Ex.instruction
         Ex.state = False
-    if (Ex.state == False and Id.state == False):
+        Mem.state = True
+    if (Ex.state == False and Id.state == True):
         Ex.instruction = Id.instruction
         Id.state = False
-    if (Id.state == False and If.state == False):
+        Ex.state = True
+    if (Id.state == False and If.state == True):
         Id.instruction = If.instruction
         If.state = False
-    if(If.state == False):
+        Id.state = True
+    if (If.state == False):
         If.instruction = nextInstruction
+        If.state = True
 
 
 def printStates():
@@ -68,13 +76,15 @@ def printStates():
 
 
 # Stores the states of modules in each state
-states = [[(i.state, i.instruction) for i in modules]]
+states = [tuple(i.instruction for i in modules)]
 
-clock = 1  # clock = 1 because we are already initializing with the first state
+clock = 0  # clock = 1 because we are already initializing with the first state
 
 while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or Wb.instruction):
     nextState(getNextInstruction(If.instruction))
-    states.append([(i.state, i.instruction) for i in modules])
+    states.append(tuple(i.instruction for i in modules))
     clock += 1
 
 print(clock)
+for state in states:
+    print(state)

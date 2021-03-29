@@ -2,6 +2,7 @@
 
 # To-do
 - [ ] update `getInstructions`
+- [ ] check states in clock cycle 2
 
 # Known issues
 

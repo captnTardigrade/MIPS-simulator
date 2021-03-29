@@ -1,6 +1,7 @@
 import re
 
-pattern = re.compile(r"[lsw]{2}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\d*\(\$([a-z][0-9])\)")
-string = "lw $r1, 0($r2)"
+pattern = re.compile(
+    r"\w{2,3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])")
+string = "sub $r4, $r1, $r5"
 matches = pattern.match(string)
 print(matches.group(1))
