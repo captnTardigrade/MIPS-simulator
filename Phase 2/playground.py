@@ -1,6 +1,6 @@
-import sys
-sys.path.append("../reading_asm.py")
-from reading_asm import getData, getInstructions
+# import sys
+# sys.path.append("../Phase 1/reading_asm.py")
+# from reading_asm import getData, getInstructions
 import re
 # -------------------------PRE-PROCESSING START-------------------------- #
 # Global constants
