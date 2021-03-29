@@ -14,7 +14,6 @@ memory = [0]*MEMORY_SIZE
 
 # path to the asm file
 path = r"{}".format(input("Enter the path to the asm file: "))
-''' path = r"./bubbleSort.asm" '''
 
 '''
 namedRegisters design:
