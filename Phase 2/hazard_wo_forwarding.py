@@ -1,26 +1,26 @@
 import re
-import itertools
 
 instructions = ["lw $r1, 0($r2)", "sub $r4, $r1, $r5",
-                "and $r6, $r1, $r7"]
+                "and $r6, $r1, $r7", "or $r8, $r1, $r9"]
 
-registers = [[0 for _ in range(10)] for _ in instructions]
+registers = {instruction: [0 for _ in range(
+    10)] for instruction in instructions}
 
 # 0 -> not being used
 # 1 -> read
 # 2 -> write
 
-for i in range(len(instructions)):
+for i in instructions:
     loadPattern = re.compile(
         r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\d*\(\$([a-z][0-9])\)")
     pattern = re.compile(
         r"\w{2,3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])")
-    matches = loadPattern.match(instructions[i])
+    matches = loadPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 2
         registers[i][int(matches.group(2)[1:])] = 1
 
-    matches = pattern.match(instructions[i])
+    matches = pattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 2
         registers[i][int(matches.group(2)[1:])] = 1
@@ -41,12 +41,24 @@ modules = [If, Id, Ex, Mem, Wb]
 
 
 # Initializing IF with the first instruction
-If.instruction = instructions[0]
-If.state = True
+# If.state = True
 
 
 instructionBuffer = [i for i in instructions]
+for _ in range(5):
+    instructionBuffer.append(None)
+
+
+def hasHazard(i1, i2):
+    for i in range(len(registers[instructions[0]])):
+        if i1 and i2:
+            if (registers[i1][i] == 1 and registers[i2][i] == 2) or (registers[i1][i] == 2 and registers[i2][i] == 2):
+                return True
+    return False
+
+
 buffer = []
+
 
 def nextState():
     '''
@@ -58,8 +70,10 @@ def nextState():
         Updates the states of modules to the states
         the next clock cycle
     '''
-    global modules, buffer
+    global modules, buffer, instructionBuffer
     Wb.state = False
+    if buffer and Wb.instruction == buffer[0]:
+        buffer.pop(0)
     if (Wb.state == False and Mem.state == True):
         Wb.instruction = Mem.instruction
         Wb.state = True
@@ -68,18 +82,14 @@ def nextState():
         Mem.instruction = Ex.instruction
         Ex.state = False
         Mem.state = True
-    flag = 0
-    i = 0
     try:
         i = buffer.index(Id.instruction)
     except ValueError:
-        pass
-    if i >= 1:
-        for j in range(len(registers[0])):
-            if (registers[i][j] == 2 and registers[i-1][j] == 2) or (registers[i][j] == 2 and registers[i-2][j] == 2) or (registers[i][j] == 1 and registers[i-1][j] == 2) or (registers[i][j] == 1 and registers[i-2][j] == 2):
-                flag = 1
-                break
-    if flag:
+        i = 0
+    if i >= 1 and hasHazard(buffer[i], buffer[i-1]):
+        Ex.state = True
+        Mem.state = True
+    elif i >= 2 and hasHazard(buffer[i], buffer[i-2]):
         Ex.state = True
         Mem.state = True
     if (Ex.state == False and Id.state == True):
@@ -92,22 +102,20 @@ def nextState():
         Id.state = True
     if (If.state == False):
         If.state = True
-        if instructionBuffer:
-            If.instruction = instructionBuffer.pop(0)
+        If.instruction = instructionBuffer.pop(0)
         buffer.append(If.instruction)
 
 
-# Stores the states of modules in each state
-# states = [[(i.state, i.instruction) for i in modules]]
 states = []
-
 clock = 0
-
-while (instructionBuffer):
-    states.append([(i.state, i.instruction) for i in modules])
+nextState()
+states.append([(i.state, i.instruction) for i in modules])
+while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or Wb.instruction):
     nextState()
+    states.append([(i.state, i.instruction) for i in modules])
     clock += 1
 
 print(clock)
+f = open("output.txt", 'w')
 for state in states:
-    print(state)
+    f.write(str(state)+"\n")
