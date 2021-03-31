@@ -1,9 +1,7 @@
 # Phase 2
 
 # To-do
-- [ ] update `getInstructions`
-- [ ] check states in clock cycle 2
-
+- [ ] Make path easily changable
 # Known issues
 
 1. `getData` in reading_asm.py cannot store unnamed variables

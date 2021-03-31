@@ -16,26 +16,26 @@ registers = {instruction: [0 for _ in range(
 
 for i in instructions:
     loadPattern = re.compile(
-    r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
+        r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\d*\(\$([a-z][0-9])\)")
     branchPattern = re.compile(
-        r"\w{3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(\w+)")
+        r"\w{3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(\w+)")  
     pattern = re.compile(
-        r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
+        r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])")
     matches = loadPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 2
-        if "$" in matches.group(2):
-            registers[i][int(matches.group(2)[1:])] = 1
-    matches = pattern.match(i)
-    if matches:
         registers[i][int(matches.group(2)[1:])] = 1
-        registers[i][int(matches.group(1)[1:])] = 2
-        if "$" in matches.group(3):
-            registers[i][int(matches.group(3)[1:])] = 1
+
     matches = branchPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 1
         registers[i][int(matches.group(2)[1:])] = 1
+
+    matches = pattern.match(i)
+    if matches:
+        registers[i][int(matches.group(1)[1:])] = 2
+        registers[i][int(matches.group(2)[1:])] = 1
+        registers[i][int(matches.group(3)[1:])] = 1
 
 
 class Module:
@@ -55,7 +55,7 @@ modules = [If, Id, Ex, Mem, Wb]
 # If.state = True
 
 
-instructionBuffer = instructionSeq
+instructionBuffer = [i for i in instructions]
 for _ in range(5):
     instructionBuffer.append(None)
 
@@ -104,15 +104,10 @@ def nextState():
         Ex.instruction = Id.instruction
         Id.state = False
         Ex.state = True
-    if If.instruction and (If.instruction[0] == "b" and (i >= 1 and hasHazard(buffer[i], buffer[i-1])) or (i >= 2 and hasHazard(buffer[i], buffer[i-2]) or (i >= 3 and hasHazard(buffer[i], buffer[i-3])))):
-
     if (Id.state == False and If.state == True):
         Id.instruction = If.instruction
         If.state = False
         Id.state = True
-        if Id.instruction and (Id.instruction[0] == "b" or (Id.instruction[0] == "j" and Id.instruction != "jr")):
-            If.state = True
-            If.instruction = "Stall"
     if (If.state == False):
         If.state = True
         If.instruction = instructionBuffer.pop(0)
@@ -132,4 +127,5 @@ print(f"clock: {clock}")
 f = open("output.txt", 'w')
 for state in states:
     f.write(str(state)+"\n")
-f.close()
+
+print(instructions)

@@ -1,5 +1,6 @@
-import re
+import re, os
 from reading_asm import getData, getInstructions
+os.chdir(r"./Phase 2/")
 # -------------------------PRE-PROCESSING START-------------------------- #
 # Global constants
 REGISTER_SIZE = 32
@@ -12,8 +13,9 @@ memPointer = 0
 registers = [0]*REGISTER_SIZE
 memory = [0]*MEMORY_SIZE
 
+instructionSeq = []
 # path to the asm file
-path = r"{}".format(input("Enter the path to the asm file: "))
+path = "./add.asm"
 
 '''
 namedRegisters design:
@@ -101,21 +103,13 @@ def runInstruction(instruction):
     '''
 
     global pc
+    instructionSeq.append(memory[pc])
     if pc >= 4000 or pc < 2000:
         return
 
     if instruction[:4] == "addi":
         args = [i.strip() for i in instruction[4:].split(",")]
-        srcOne = accessRegister(args[1])
-        if str(srcOne)[:2] == "0x":
-            srcOne = int(srcOne, base=16)
-        try:
-            srcTwo = int(args[2])
-        except:
-            srcTwo = int(args[2], base=16)
-        res = hex(srcOne + srcTwo)
-        modifyRegister(args[0], res)
-
+        modifyRegister(args[0], accessRegister(args[1]) + int(args[2]))
         pc += 1
 
     elif instruction[:3] == "add":
@@ -242,10 +236,9 @@ def runFile():
     parameters: None
     returns: None
     '''
-    global pc
+    global pc, instructionSeq
     while memory[pc] != 0:
         runInstruction(memory[pc])
-
 
 def reinitialize():
     global pc, memPointer, registers, memory, path
@@ -258,19 +251,20 @@ def reinitialize():
     # path to the asm file
     path = r"{}".format(input("Enter the path to the asm file: "))
 
+
 def printRegister():
 
-   for x in range(len(namedRegistersList)):
+    for x in range(len(namedRegistersList)):
 
-        print(namedRegistersList[x],registers[x])
+        print(namedRegistersList[x], registers[x])
+
 
 def printMemory():
-   i=0
-   a=2000
-
-   while i<=memPointer:
-    print(a+i,memory[i])
-    i=i+4;
+    i = 0
+    a = 2000
+    while i <= memPointer:
+        print(a+i, memory[i])
+        i = i+4
 
 
 def showMemorySegment(start, end):
@@ -281,33 +275,34 @@ def showMemorySegment(start, end):
     '''
     print(memory[start:end+1])
 
+runFile()
 
-while True:
-    print("\nTo reinitialize, enter 1")
-    print("To run the file, enter 2")
-    print("To show the registers, enter 3")
-    print("To show the memory segment, enter 4")
-    print("To show the memory segment from given start to end, enter 5")
-    print("To exit, press enter any other number")
-    command = int(input("Enter the command: "))
+# while True:
+#     print("\nTo reinitialize, enter 1")
+#     print("To run the file, enter 2")
+#     print("To show the registers, enter 3")
+#     print("To show the memory segment, enter 4")
+#     print("To show the memory segment from given start to end, enter 5")
+#     print("To exit, press enter any other number")
+#     command = int(input("Enter the command: "))
 
-    if command == 1:
-        reinitialize()
-        print("\nReinitialize successful")
-    elif command == 2:
-        runFile()
-        print("\nRun successful")
-    elif command == 3:
-        print("-----------------------------------REGISTER--------------------------------------")
-        printRegister()
-    elif command == 4:
-        print("-----------------------------------MEMORY----------------------------------------")
-        printMemory()
-    elif command == 5:
-        start, end = map(int, input(
-            "Enter start and end indices of the segment to be printed seperated by a space: ").split())
-        showMemorySegment(start, end)
-    else:
-        break
+#     if command == 1:
+#         reinitialize()
+#         print("\nReinitialize successful")
+#     elif command == 2:
+#         runFile()
+#         print("\nRun successful")
+#     elif command == 3:
+#         print("-----------------------------------REGISTER--------------------------------------")
+#         printRegister()
+#     elif command == 4:
+#         print("-----------------------------------MEMORY----------------------------------------")
+#         printMemory()
+#     elif command == 5:
+#         start, end = map(int, input(
+#             "Enter start and end indices of the segment to be printed seperated by a space: ").split())
+#         showMemorySegment(start, end)
+#     else:
+#         break
 
-    print("-"*50)
+#     print("-"*50)
