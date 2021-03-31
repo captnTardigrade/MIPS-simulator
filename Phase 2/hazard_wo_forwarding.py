@@ -7,6 +7,7 @@ mainInstructions = getInstructions(path)
 for _, i in mainInstructions.items():
     instructions.extend(i)
 
+
 registers = {instruction: [0 for _ in range(
     10)] for instruction in instructions}
 
@@ -73,8 +74,6 @@ buffer = []
 
 def nextState():
     '''
-    Input: nextInstruction (string)
-
     Returns: None
 
     Description:
@@ -104,15 +103,15 @@ def nextState():
         Ex.instruction = Id.instruction
         Id.state = False
         Ex.state = True
-    if If.instruction and (If.instruction[0] == "b" and (i >= 1 and hasHazard(buffer[i], buffer[i-1])) or (i >= 2 and hasHazard(buffer[i], buffer[i-2]) or (i >= 3 and hasHazard(buffer[i], buffer[i-3])))):
+    # if If.instruction and (If.instruction[0] == "b" and (i >= 1 and hasHazard(buffer[i], buffer[i-1])) or (i >= 2 and hasHazard(buffer[i], buffer[i-2]) or (i >= 3 and hasHazard(buffer[i], buffer[i-3])))):
 
     if (Id.state == False and If.state == True):
         Id.instruction = If.instruction
         If.state = False
         Id.state = True
-        if Id.instruction and (Id.instruction[0] == "b" or (Id.instruction[0] == "j" and Id.instruction != "jr")):
-            If.state = True
-            If.instruction = "Stall"
+        # if Id.instruction and (Id.instruction[0] == "b" or (Id.instruction[0] == "j" and Id.instruction != "jr")):
+        #     If.state = True
+        #     If.instruction = "Stall"
     if (If.state == False):
         If.state = True
         If.instruction = instructionBuffer.pop(0)
@@ -128,8 +127,8 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     states.append([(i.state, i.instruction) for i in modules])
     clock += 1
 
-print(f"clock: {clock}")
-f = open("output.txt", 'w')
-for state in states:
-    f.write(str(state)+"\n")
-f.close()
+# print(f"clock: {clock}")
+# f = open("output.txt", 'w')
+# for state in states:
+#     f.write(str(state)+"\n")
+# f.close()

@@ -18,7 +18,7 @@ for i in instructions:
     loadPattern = re.compile(
         r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\d*\(\$([a-z][0-9])\)")
     branchPattern = re.compile(
-        r"\w{3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(\w+)")  
+        r"\w{3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(\w+)")
     pattern = re.compile(
         r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])")
     matches = loadPattern.match(i)
@@ -61,6 +61,25 @@ for _ in range(5):
 
 
 def hasHazard(i1, i2):
+    pattern = re.compile(
+        r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
+    loadPattern = re.compile(
+        r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
+    matchOne = loadPattern.match(i1)
+    matchTwo = pattern.match(i2)
+    if matchOne and matchTwo:
+        if (matchOne.group(1) == matchTwo.group(2)  or matchOne.group(1) == matchTwo.group(3)[1:]):
+            return True
+    
+    matchOne = loadPattern.match(i1)
+    matchTwo = loadPattern.match(i2)
+
+    subRegex = re.compile(r"\d+\(\$(\w\d+)\)")
+    matchTwo = subRegex.match(matchTwo.group(2))
+
+    if matchOne and matchTwo:
+        if matchOne.group(1) == matchTwo.group(1):
+            return True
     for i in range(len(registers[instructions[0]])):
         if i1 and i2:
             if (registers[i1][i] == 1 and registers[i2][i] == 2) or (registers[i1][i] == 2 and registers[i2][i] == 2):
@@ -73,8 +92,6 @@ buffer = []
 
 def nextState():
     '''
-    Input: nextInstruction (string)
-
     Returns: None
 
     Description:
