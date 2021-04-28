@@ -106,10 +106,3 @@ class Cache:
 
 if __name__ == "__main__":
     cache = Cache(16, 256, 4, 2)
-    i = 0
-    for s in cache.cache:
-        for j in range(len(s)):
-            cache.updateCache(f"{i:012b}", j)
-    print(cache.search("000000000000"))
-    print(cache.getBlock("000000000000"))
-    print(cache.isFull())
