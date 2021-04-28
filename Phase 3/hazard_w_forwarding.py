@@ -139,10 +139,3 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     nextState()
     states.append([(i.state, i.instruction) for i in modules])
     clock += 1
-
-print(f"clock: {clock}")
-f = open("output.txt", 'w')
-for state in states:
-    f.write(str(state)+"\n")
-
-print(instructions)
