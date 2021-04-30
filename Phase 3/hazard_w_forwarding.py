@@ -1,5 +1,5 @@
 import re
-from main import instructionSeq, path
+from main import instructionSeq, path, caches, accessRegister
 from reading_asm import getInstructions
 
 instructions = []
@@ -68,9 +68,9 @@ def hasHazard(i1, i2):
     matchOne = loadPattern.match(i1)
     matchTwo = pattern.match(i2)
     if matchOne and matchTwo:
-        if (matchOne.group(1) == matchTwo.group(2)  or matchOne.group(1) == matchTwo.group(3)[1:]):
+        if (matchOne.group(1) == matchTwo.group(2) or matchOne.group(1) == matchTwo.group(3)[1:]):
             return True
-    
+
     matchOne = loadPattern.match(i1)
     matchTwo = loadPattern.match(i2)
 
@@ -99,9 +99,11 @@ def nextState():
         the next clock cycle
     '''
     global modules, buffer, instructionBuffer
+    flag = 0
     Wb.state = False
     if buffer and Wb.instruction == buffer[0]:
         buffer.pop(0)
+    
     if (Wb.state == False and Mem.state == True):
         Wb.instruction = Mem.instruction
         Wb.state = True
@@ -129,6 +131,26 @@ def nextState():
         If.state = True
         If.instruction = instructionBuffer.pop(0)
         buffer.append(If.instruction)
+
+    args = [i.strip() for i in Mem.instruction[2:].split(",")]
+    if "($" in args[1]:
+        registerPattern = re.compile(r"(\d+)\((\$(\w)(\d+))\)")
+        match = registerPattern.match(args[1])
+        src = accessRegister(match.group(2))
+        if str(src)[:2] == "0x":
+            address = f"{int(match.group(1))+int(src, base=16):012b}"
+            flag = 0
+            for cache_level in caches:
+                if cache_level.search(address):
+                    flag = 1
+                    break
+            if not flag:
+                pass
+    else:
+        try:
+            modifyRegister(args[0], memory[int(data[args[1]], base=16)])
+        except KeyError:
+            print("Variable does not exist")
 
 
 states = []

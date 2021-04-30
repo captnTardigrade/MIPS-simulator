@@ -5,8 +5,8 @@ import cache
 from reading_asm import getData, getInstructions
 
 ##---- DEFINE THE LEVELS OF CACHE HERE -----##
-L1 = cache.Cache(8, 64, 4, 2)
-L2 = cache.Cache(16, 256, 4, 4)
+L1 = cache.Cache(8, 64, 4, 2, 1)
+L2 = cache.Cache(16, 256, 4, 4, 2)
 caches = [L1, L2]
 
 
@@ -239,7 +239,7 @@ def showMemorySegment(start, end):
 
 
 if __name__ == "__main__":
-    L1 = cache.Cache(16, 256, 4, 2)
+    L1 = cache.Cache(16, 256, 4, 2, 1)
     print(L1.getBlock("000000000000"))
 # runFile()
 
