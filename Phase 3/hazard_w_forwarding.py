@@ -1,6 +1,7 @@
 import re
 from main import instructionSeq, path, caches, accessRegister
 from reading_asm import getInstructions
+from globalVariables import *
 
 instructions = []
 mainInstructions = getInstructions(path)
@@ -141,14 +142,21 @@ def nextState():
             address = f"{int(match.group(1))+int(src, base=16):012b}"
             flag = 0
             for cache_level in caches:
-                if cache_level.search(address):
+                if cache_level.isValInCache(address):
                     flag = 1
                     break
             if not flag:
-                pass
+                numMainMemoryAccesses += 1
     else:
         try:
-            modifyRegister(args[0], memory[int(data[args[1]], base=16)])
+            address = f"{int(data[args[1]], base=16):012b}"
+            flag = 0
+            for cache_level in caches:
+                if cache_level.isValInCache(address):
+                    flag = 1
+                    break
+            if not flag:
+                numMainMemoryAccesses += 1
         except KeyError:
             print("Variable does not exist")
 
@@ -161,3 +169,14 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     nextState()
     states.append([(i.state, i.instruction) for i in modules])
     clock += 1
+
+## adding the number of main memory accesses time
+clock += numMainMemoryAccesses*MEMORY_ACCESS_TIME
+
+## adding the access times for each level of cache
+for cache_level in caches:
+    ## accounting for number of hits
+    clock += cache_level.getNumHits()*cache_level.accessLatency
+    numMisses = cache_level.getNumAccesses() - cache_level.getNumHits()
+    ## accounting for number of misses
+    clock += numMisses*(cache_level.accessLatency + MEMORY_ACCESS_TIME)

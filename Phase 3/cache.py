@@ -37,21 +37,25 @@ class Cache:
         self.tagBits = globalVariables.ADDRESS_BITS - \
             self.indexBits - self.offsetBits
 
+        self._numHits = 0
+        self._numAccesses = 0
+        self._numWrites = 0
+
     def search(self, address):
         '''
         description:
             searches for the given address in the cache
         returns:
-            (any) the value if it is present in the cache
-            else, returns False
+            (list) the block if it is present in the cache
+            and false otherwise
         '''
-        globalVariables.totalCacheAccesses += 1
+        self._numAccesses += 1
         tag, index, offset = self.getLocation(address)
         theSet = self.cache[index]
         try:
             blockIndex = theSet[MagicNumbers.TAGS.value].index(tag)
             if theSet[blockIndex][MagicNumbers.VALID.value] == 1:
-                globalVariables.numCacheHits += 1
+                self._numHits += 1
                 self.updateCounter(index, blockIndex)
                 return theSet[blockIndex][MagicNumbers.BLOCK.value][offset]
             return False
@@ -96,8 +100,16 @@ class Cache:
         return (tag, index, offset)
 
     def getBlock(self, address):
+        '''
+        description:
+            fetches the block at the given address from main memory
+        parameters:
+            address: (str) address of the block in binary
+        returns:
+            (list) block starting at the given address
+        '''
         start = int(address, base=2)
-        return globalVariables.memory[start:start+self.blockSize*4:4]
+        return globalVariables.memory[start:start+self.blockSize*globalVariables.INT_SIZE:globalVariables.INT_SIZE]
 
     def isFull(self, index):
         '''
@@ -131,11 +143,11 @@ class Cache:
             None
         '''
         tag, index, offset = self.getLocation(address)
-        ## if the block is not in the cache
+        # if the block is not in the cache
         if not self.search(address):
             if self.isFull(index):
-            ## if the block is full, find the least recently used one
-            ## and replace it
+                # if the block is full, find the least recently used one
+                # and replace it
                 minIndex = 0
                 for b in range(len(self.cache[index])):
                     if self.cache[index][b][MagicNumbers.COUNTER.value] == 0:
@@ -143,27 +155,46 @@ class Cache:
                         break
 
                 # write back the value in self.cache[minIndex] to main memory
+                self._numWrites += 1
                 writeBackAddress = int(
                     self.cache[index][minIndex][MagicNumbers.ADDRESS.value], base=2)
                 globalVariables.memory[writeBackAddress:writeBackAddress+self.blockSize *
-                                       4:4] = self.cache[index][minIndex][MagicNumbers.BLOCK.value]
+                                       globalVariables.INT_SIZE:globalVariables.INT_SIZE] = self.cache[index][minIndex][MagicNumbers.BLOCK.value]
 
                 self.cache[index][minIndex] = [
                     tag, self.getBlock(address), 1, 0]
             else:
-                ## find the block that is empty and fill it
+                # find the block that is empty and fill it
                 emptyBlock = 0
                 for b in range(len(self.cache[index])):
                     if not self.cache[index][b][MagicNumbers.VALID.value]:
                         emptyBlock = b
+                        break
                 self.updateCache(address, emptyBlock)
         else:
-            ## find the blockIndex and update its counter
+            # find the blockIndex and update its counter
             blockIndex = 0
             for b in range(len(self.cache[index])):
                 if self.cache[index][b][MagicNumbers.TAGS.value] == tag:
                     blockIndex = b
+                    break
             self.updateCounter(index, blockIndex)
+
+    def isValInCache(self, address):
+        tag, index, offset = self.getLocation(address)
+        for b in range(len(self.cache[index])):
+            if self.cache[index][b][MagicNumbers.TAGS.value] == tag:
+                return True
+        return False
+
+    def getNumHits(self):
+        return self._numHits
+
+    def getNumAccesses(self):
+        return self._numAccesses
+
+    def getNumWrites(self):
+        return self._numWrites
 
 
 if __name__ == "__main__":

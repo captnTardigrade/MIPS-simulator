@@ -6,6 +6,8 @@ MEMORY_SIZE = 4096
 BASE = 2000
 MEMORY_ACCESS_TIME = 200
 
+INT_SIZE = 4
+
 ADDRESS_BITS = int(math.log2(MEMORY_SIZE))
 
 pc = BASE
@@ -38,11 +40,11 @@ for key, value in data.items():
         data[key] = hex(memPointer)
         for i in value:
             memory[memPointer] = i
-            memPointer += 4
+            memPointer += INT_SIZE
     else:
         memory[memPointer] = value
         data[key] = hex(memPointer)
-        memPointer += 4
+        memPointer += INT_SIZE
 
 # storing instructions in memory
 instructionPointer = BASE
@@ -53,5 +55,4 @@ for label in instructions.keys():
         instructionPointer += 1
     instructions[label] = temp
 
-numCacheHits = 0
-totalCacheAccesses = 0
+numMainMemoryAccesses = 0

@@ -117,16 +117,23 @@ def runInstruction(instruction):
                 address = f"{int(match.group(1))+int(src, base=16):012b}"
                 flag = 0
                 for cache_level in caches:
-                    if cache_level.search(address):
-                        modifyRegister(args[0], cache_level.search(address))
+                    if cache_level.isValInCache(address):
+                        modifyRegister(args[0], cache_level.LeastRecentlyUsed(address))
                         flag = 1
                         break
                 if not flag:
-                    modifyRegister(args[0], value)
-
+                    modifyRegister(args[0], memory[int(match.group(1))+int(src, base=16)])
         else:
             try:
-                modifyRegister(args[0], memory[int(data[args[1]], base=16)])
+                address = f"{int(data[args[1]], base=16):012b}"
+                flag = 0
+                for cache_level in caches:
+                    if cache_level.isValInCache(address):
+                        modifyRegister(args[0], cache_level.LeastRecentlyUsed(address))
+                        flag = 1
+                        break
+                if not flag:
+                    modifyRegister(args[0], memory[int(data[args[1]], base=16)])
             except KeyError:
                 print("Variable does not exist")
         pc += 1
@@ -226,7 +233,7 @@ def printMemory():
     a = 2000
     while i <= memPointer:
         print(a+i, memory[i])
-        i = i+4
+        i = i+INT_SIZE
 
 
 def showMemorySegment(start, end):
@@ -239,8 +246,7 @@ def showMemorySegment(start, end):
 
 
 if __name__ == "__main__":
-    L1 = cache.Cache(16, 256, 4, 2, 1)
-    print(L1.getBlock("000000000000"))
+    pass
 # runFile()
 
 # while True:
