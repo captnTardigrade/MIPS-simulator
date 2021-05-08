@@ -64,6 +64,8 @@ def nextState(nextInstruction):
         If.instruction = nextInstruction
         If.state = True
 
+    
+
 
 def printStates():
     print("-"*40)

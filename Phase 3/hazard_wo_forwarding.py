@@ -111,33 +111,8 @@ def nextState():
         If.state = True
         If.instruction = instructionBuffer.pop(0)
         buffer.append(If.instruction)
-
-    args = [i.strip() for i in Mem.instruction[2:].split(",")]
-    if "($" in args[1]:
-        registerPattern = re.compile(r"(\d+)\((\$(\w)(\d+))\)")
-        match = registerPattern.match(args[1])
-        src = accessRegister(match.group(2))
-        if str(src)[:2] == "0x":
-            address = f"{int(match.group(1))+int(src, base=16):012b}"
-            flag = 0
-            for cache_level in caches:
-                if cache_level.isValInCache(address):
-                    flag = 1
-                    break
-            if not flag:
-                numMainMemoryAccesses += 1
-    else:
-        try:
-            address = f"{int(data[args[1]], base=16):012b}"
-            flag = 0
-            for cache_level in caches:
-                if cache_level.isValInCache(address):
-                    flag = 1
-                    break
-            if not flag:
-                numMainMemoryAccesses += 1
-        except KeyError:
-            print("Variable does not exist")
+    
+    instruction = Mem.instruction
 
 
 states = []
@@ -148,14 +123,3 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     nextState()
     states.append([(i.state, i.instruction) for i in modules])
     clock += 1
-
-## adding the number of main memory accesses time
-clock += numMainMemoryAccesses*MEMORY_ACCESS_TIME
-
-## adding the access times for each level of cache
-for cache_level in caches:
-    ## accounting for number of hits
-    clock += cache_level.getNumHits()*cache_level.accessLatency
-    numMisses = cache_level.getNumAccesses() - cache_level.getNumHits()
-    ## accounting for number of misses
-    clock += numMisses*(cache_level.accessLatency + MEMORY_ACCESS_TIME)

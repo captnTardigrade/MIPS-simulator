@@ -18,7 +18,7 @@ memory = [0]*MEMORY_SIZE
 
 instructionSeq = []
 # path to the asm file
-path = "./add.asm"
+path = "./bubbleSort.asm"
 
 '''
 namedRegisters design:
@@ -31,19 +31,21 @@ namedRegistersList = ["r0", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1"
                       "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra"]
 
 data = getData(path)
+typeDef = {}
 instructions = getInstructions(path)
 
 # storing variables in memory
 # in the data segment
 for key, value in data.items():
+    data[key] = hex(memPointer)
     if type(value) == list:
-        data[key] = hex(memPointer)
+        typeDef[key] = type(value).__name__
         for i in value:
             memory[memPointer] = i
             memPointer += INT_SIZE
     else:
         memory[memPointer] = value
-        data[key] = hex(memPointer)
+        typeDef[key] = type(value).__name__
         memPointer += INT_SIZE
 
 # storing instructions in memory
@@ -56,3 +58,9 @@ for label in instructions.keys():
     instructions[label] = temp
 
 numMainMemoryAccesses = 0
+
+def convertToBinary(i):
+    return f"{i:032b}"
+
+def convertToDec(i):
+    return int(str(i), base=2)

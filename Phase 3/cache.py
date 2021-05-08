@@ -56,7 +56,7 @@ class Cache:
             blockIndex = theSet[MagicNumbers.TAGS.value].index(tag)
             if theSet[blockIndex][MagicNumbers.VALID.value] == 1:
                 self._numHits += 1
-                self.updateCounter(index, blockIndex)
+                self.updateCounter(address)
                 return theSet[blockIndex][MagicNumbers.BLOCK.value][offset]
             return False
         except ValueError:
@@ -81,7 +81,7 @@ class Cache:
         self.cache[index][blockIndex][MagicNumbers.VALID.value] = 1
         self.cache[index][blockIndex][MagicNumbers.ADDRESS.value] = address
 
-        self.updateCounter(index, blockIndex)
+        self.updateCounter(address)
 
     def getLocation(self, address):
         '''
@@ -125,7 +125,17 @@ class Cache:
             count += b[MagicNumbers.VALID.value]
         return count == self.associativity
 
-    def updateCounter(self, index, blockIndex):
+    def _getBlockIndex(self, address):
+        tag, index, offset = self.getLocation(address)
+        for blockIndex in range(self.associativity):
+            if self.cache[index][blockIndex][MagicNumbers.ADDRESS] == address:
+                return blockIndex
+
+        return -1
+
+    def updateCounter(self, address):
+        tag, index, offset = self.getLocation(address)
+        blockIndex = self._getBlockIndex(address)
         temp = self.cache[index][blockIndex][MagicNumbers.COUNTER.value]
         for b in self.cache[index]:
             if b[MagicNumbers.COUNTER.value] > temp:
@@ -178,7 +188,7 @@ class Cache:
                 if self.cache[index][b][MagicNumbers.TAGS.value] == tag:
                     blockIndex = b
                     break
-            self.updateCounter(index, blockIndex)
+            self.updateCounter(address)
 
     def isValInCache(self, address):
         tag, index, offset = self.getLocation(address)

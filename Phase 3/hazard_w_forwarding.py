@@ -1,5 +1,5 @@
 import re
-from main import instructionSeq, path, caches, accessRegister
+from main import instructionSeq, path, caches, _accessRegister
 from reading_asm import getInstructions
 from globalVariables import *
 
@@ -137,7 +137,7 @@ def nextState():
     if "($" in args[1]:
         registerPattern = re.compile(r"(\d+)\((\$(\w)(\d+))\)")
         match = registerPattern.match(args[1])
-        src = accessRegister(match.group(2))
+        src = _accessRegister(match.group(2))
         if str(src)[:2] == "0x":
             address = f"{int(match.group(1))+int(src, base=16):012b}"
             flag = 0
