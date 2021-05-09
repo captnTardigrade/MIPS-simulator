@@ -51,11 +51,6 @@ Id, If, Ex, Mem, Wb = (Module() for _ in range(5))
 # Storing in this format for easier access
 modules = [If, Id, Ex, Mem, Wb]
 
-
-# Initializing IF with the first instruction
-# If.state = True
-
-
 instructionBuffer = [i for i in instructions]
 for _ in range(5):
     instructionBuffer.append(None)
@@ -88,9 +83,8 @@ def hasHazard(i1, i2):
     return False
 
 
-buffer = []
 
-
+_buffer = []
 def nextState():
     '''
     Returns: None
@@ -99,11 +93,11 @@ def nextState():
         Updates the states of modules to the states
         the next clock cycle
     '''
-    global modules, buffer, instructionBuffer
+    global modules, _buffer, instructionBuffer
     flag = 0
     Wb.state = False
-    if buffer and Wb.instruction == buffer[0]:
-        buffer.pop(0)
+    if _buffer and Wb.instruction == _buffer[0]:
+        _buffer.pop(0)
     
     if (Wb.state == False and Mem.state == True):
         Wb.instruction = Mem.instruction
@@ -114,10 +108,10 @@ def nextState():
         Ex.state = False
         Mem.state = True
     try:
-        i = buffer.index(Id.instruction)
+        i = _buffer.index(Id.instruction)
     except ValueError:
         i = 0
-    if (i >= 1 and hasHazard(buffer[i], buffer[i-1])) or (i >= 2 and hasHazard(buffer[i], buffer[i-2])):
+    if (i >= 1 and hasHazard(_buffer[i], _buffer[i-1])) or (i >= 2 and hasHazard(_buffer[i], _buffer[i-2])):
         Ex.state = True
         Mem.state = True
     if (Ex.state == False and Id.state == True):
@@ -131,34 +125,31 @@ def nextState():
     if (If.state == False):
         If.state = True
         If.instruction = instructionBuffer.pop(0)
-        buffer.append(If.instruction)
+        _buffer.append(If.instruction)
 
-    args = [i.strip() for i in Mem.instruction[2:].split(",")]
-    if "($" in args[1]:
-        registerPattern = re.compile(r"(\d+)\((\$(\w)(\d+))\)")
-        match = registerPattern.match(args[1])
-        src = _accessRegister(match.group(2))
-        if str(src)[:2] == "0x":
-            address = f"{int(match.group(1))+int(src, base=16):012b}"
-            flag = 0
-            for cache_level in caches:
-                if cache_level.isValInCache(address):
-                    flag = 1
-                    break
-            if not flag:
-                numMainMemoryAccesses += 1
-    else:
+    loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\w+)")
+    matches = loadInstruction.match(instruction)
+    if matches:
         try:
-            address = f"{int(data[args[1]], base=16):012b}"
-            flag = 0
-            for cache_level in caches:
-                if cache_level.isValInCache(address):
-                    flag = 1
-                    break
-            if not flag:
-                numMainMemoryAccesses += 1
+            hexAddress = data[matches.group(2)]
         except KeyError:
             print("Variable does not exist")
+            exit(1)
+        address = f"{int(hexAddress, base=16):012b}"
+        for cache_level in caches:
+            if cache_level.isValInCache(address):
+                numStalls += cache_level.accessLatency
+                cache_level.updateCounter(address)
+                break
+    loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\d+)\((\$\w\d+)\)")
+    matches = loadInstruction.match(instruction)
+    if matches:
+        address = _accessRegister(matches.group(3))
+        for cache_level in caches:
+            if cache_level.isValInCache(address):
+                numStalls += cache_level.accessLatency
+                cache_level.updateCounter(address)
+                break
 
 
 states = []
@@ -169,14 +160,3 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     nextState()
     states.append([(i.state, i.instruction) for i in modules])
     clock += 1
-
-## adding the number of main memory accesses time
-clock += numMainMemoryAccesses*MEMORY_ACCESS_TIME
-
-## adding the access times for each level of cache
-for cache_level in caches:
-    ## accounting for number of hits
-    clock += cache_level.getNumHits()*cache_level.accessLatency
-    numMisses = cache_level.getNumAccesses() - cache_level.getNumHits()
-    ## accounting for number of misses
-    clock += numMisses*(cache_level.accessLatency + MEMORY_ACCESS_TIME)

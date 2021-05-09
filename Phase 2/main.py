@@ -1,6 +1,6 @@
-import re, os
+import re
 from reading_asm import getData, getInstructions
-os.chdir(r"./Phase 2/")
+# os.chdir(r"./Phase 2/")
 # -------------------------PRE-PROCESSING START-------------------------- #
 # Global constants
 REGISTER_SIZE = 32
@@ -15,7 +15,7 @@ memory = [0]*MEMORY_SIZE
 
 instructionSeq = []
 # path to the asm file
-path = "./add.asm"
+path = "./bubbleSort.asm"
 
 '''
 namedRegisters design:
@@ -109,7 +109,10 @@ def runInstruction(instruction):
 
     if instruction[:4] == "addi":
         args = [i.strip() for i in instruction[4:].split(",")]
-        modifyRegister(args[0], accessRegister(args[1]) + int(args[2]))
+        if "0x" in str(accessRegister(args[1])):
+            modifyRegister(args[0], int(accessRegister(args[1]), base=16) + int(args[2]))
+        else:
+            modifyRegister(args[0], accessRegister(args[1]) + int(args[2]))
         pc += 1
 
     elif instruction[:3] == "add":

@@ -1,7 +1,10 @@
 import re
-from main import instructionSeq, path
+from main import _accessRegister, instructionSeq, caches, runFile
 from reading_asm import getInstructions
+from globalVariables import *
 
+
+runFile()
 instructions = []
 mainInstructions = getInstructions(path)
 for _, i in mainInstructions.items():
@@ -9,7 +12,7 @@ for _, i in mainInstructions.items():
 
 
 registers = {instruction: [0 for _ in range(
-    10)] for instruction in instructions}
+    len(namedRegistersList))] for instruction in instructions}
 
 # 0 -> not being used
 # 1 -> read
@@ -26,18 +29,22 @@ for i in instructions:
     if matches:
         registers[i][int(matches.group(1)[1:])] = 2
         if "$" in matches.group(2):
-            registers[i][int(matches.group(2)[1:])] = 1
+            temp = re.compile(r"(\d+)\((\$(\w)(\d+|\w+))\)")
+            if temp.match(matches.group(2)).group(2) and temp.match(matches.group(2)).group(2) != "$zero":
+                registers[i][getRegisterIndex(temp.match(matches.group(2)).group(2))] = 1
     matches = pattern.match(i)
     if matches:
         registers[i][int(matches.group(2)[1:])] = 1
         registers[i][int(matches.group(1)[1:])] = 2
         if "$" in matches.group(3):
-            registers[i][int(matches.group(3)[1:])] = 1
+            if matches.group(3) != "$zero":
+                registers[i][getRegisterIndex(matches.group(3))] = 1
     matches = branchPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 1
         registers[i][int(matches.group(2)[1:])] = 1
 
+    
 
 class Module:
     def __init__(self):
@@ -54,7 +61,6 @@ modules = [If, Id, Ex, Mem, Wb]
 
 # Initializing IF with the first instruction
 # If.state = True
-
 
 instructionBuffer = instructionSeq
 for _ in range(5):
@@ -80,7 +86,7 @@ def nextState():
         Updates the states of modules to the states
         the next clock cycle
     '''
-    global modules, buffer, instructionBuffer
+    global modules, buffer, instructionBuffer, numStalls, numMainMemoryAccesses
     Wb.state = False
     if buffer and Wb.instruction == buffer[0]:
         buffer.pop(0)
@@ -103,22 +109,61 @@ def nextState():
         Ex.instruction = Id.instruction
         Id.state = False
         Ex.state = True
+    # if If.instruction and (If.instruction[0] == "b" and (i >= 1 and hasHazard(buffer[i], buffer[i-1])) or (i >= 2 and hasHazard(buffer[i], buffer[i-2]) or (i >= 3 and hasHazard(buffer[i], buffer[i-3])))):
+
     if (Id.state == False and If.state == True):
         Id.instruction = If.instruction
         If.state = False
         Id.state = True
+        # if Id.instruction and (Id.instruction[0] == "b" or (Id.instruction[0] == "j" and Id.instruction != "jr")):
+        #     If.state = True
+        #     If.instruction = "Stall"
     if (If.state == False):
         If.state = True
         If.instruction = instructionBuffer.pop(0)
         buffer.append(If.instruction)
     
+    flagTwo = False
+    matchFlag = False
     instruction = Mem.instruction
-
+    if instruction:
+        loadInstruction = re.compile(r"lw[ \t]+(\$\w+)[ \t]*,[ \t]*(\d+)\((\$\w+)\)")
+        matches = loadInstruction.match(instruction)
+        if matches:
+            matchFlag = True
+            address = _accessRegister(matches.group(3))
+            for cache_level in caches:
+                numStalls += cache_level.accessLatency - 1
+                if cache_level.isValInCache(address):
+                    cache_level.updateCounter(address)
+                    cache_level.LeastRecentlyUsed(address)
+                    flagTwo = True
+                    break
+        if not matchFlag:
+            loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*\$?(\w+)")
+            matches = loadInstruction.match(instruction)
+            if matches:
+                try:
+                    hexAddress = data[matches.group(2)]
+                except KeyError:
+                    print(f"Variable {matches.group(2)} does not exist")
+                    exit(1)
+                address = f"{int(hexAddress, base=16):012b}"
+                for cache_level in caches:
+                    numStalls += cache_level.accessLatency - 1
+                    if cache_level.isValInCache(address):
+                        cache_level.updateCounter(address)
+                        cache_level.LeastRecentlyUsed(address)
+                        flagTwo = True
+                        break
+        
+        if not flagTwo:
+            numMainMemoryAccesses += 1
 
 states = []
-clock = 0
 nextState()
 states.append([(i.state, i.instruction) for i in modules])
+clock = 0
 while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or Wb.instruction):
     nextState()
     states.append([(i.state, i.instruction) for i in modules])

@@ -1,13 +1,14 @@
 import re
-import os
 from globalVariables import *
 import cache
-from reading_asm import getData, getInstructions
 
 ##---- DEFINE THE LEVELS OF CACHE HERE -----##
 L1 = cache.Cache(8, 64, 4, 2, 1)
 L2 = cache.Cache(16, 256, 4, 4, 2)
 caches = [L1, L2]
+
+
+path = "./bubbleSort.asm"
 
 def _validRegisterCheck(r):
     errorMessage = f"{r} does not exist"
@@ -43,7 +44,7 @@ def _accessRegister(r):
         returns: (str) the value of the register in binary
     '''
     if r == "$zero":
-        return 0
+        return f"{0:012b}"
     regType = _validRegisterCheck(r)
     if regType == 1:
         registerPattern = re.compile(r"\$(\w{2})")
@@ -238,20 +239,9 @@ def reinitialize():
     path = r"{}".format(input("Enter the path to the asm file: "))
 
 
-def printRegister():
-
+def printRegisters():
     for x in range(len(namedRegistersList)):
-
         print(namedRegistersList[x], registers[x])
-
-
-def printMemory():
-    i = 0
-    a = 2000
-    while i <= memPointer:
-        print(a+i, memory[i])
-        i = i+INT_SIZE
-
 
 def showMemorySegment(start, end):
     '''
@@ -259,39 +249,31 @@ def showMemorySegment(start, end):
     parameters: (int) start, (int) end
     returns: None
     '''
-    print(memory[start:end+1])
-
+    print(memory[start:end:INT_SIZE])
 
 if __name__ == "__main__":
-    pass
-runFile()
+    while True:
+        print("\nTo reinitialize, enter 1")
+        print("To run the file, enter 2")
+        print("To show the registers, enter 3")
+        print("To show the memory segment, enter 4")
+        print("To show the memory segment from given start to end, enter 5")
+        print("To exit, press enter any other number")
+        command = int(input("Enter the command: "))
 
-while True:
-    print("\nTo reinitialize, enter 1")
-    print("To run the file, enter 2")
-    print("To show the registers, enter 3")
-    print("To show the memory segment, enter 4")
-    print("To show the memory segment from given start to end, enter 5")
-    print("To exit, press enter any other number")
-    command = int(input("Enter the command: "))
-
-    if command == 1:
-        reinitialize()
-        print("\nReinitialize successful")
-    elif command == 2:
-        runFile()
-        print("\nRun successful")
-    elif command == 3:
-        print("-----------------------------------REGISTER--------------------------------------")
-        printRegister()
-    elif command == 4:
-        print("-----------------------------------MEMORY----------------------------------------")
-        printMemory()
-    elif command == 5:
-        start, end = map(int, input(
-            "Enter start and end indices of the segment to be printed seperated by a space: ").split())
-        showMemorySegment(start, end)
-    else:
-        break
-
-    print("-"*50)
+        if command == 1:
+            reinitialize()
+            print("\nReinitialize successful")
+        elif command == 2:
+            runFile()
+            print("\nRun successful")
+        elif command == 3:
+            print("-----------------------------------REGISTERS--------------------------------------")
+            printRegisters()
+        elif command == 5:
+            start, end = map(int, input(
+                "Enter start and end indices of the segment to be printed seperated by a space: ").split())
+            showMemorySegment(start, end)
+        else:
+            break
+        print("-"*50)

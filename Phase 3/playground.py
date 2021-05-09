@@ -19,9 +19,12 @@ if matches:
             numStalls += cache_level.accessLatency
             cache_level.updateCounter(address)
             break
-matches = loadInstructionTwo.match(instruction)
 loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\d+)\((\$\w\d+)\)")
+matches = loadInstruction.match(instruction)
 if matches:
     address = _accessRegister(matches.group(3))
-    if "0x" in address:
-        address = f"{int(address, base=16):012b}"
+    for cache_level in caches:
+        if cache_level.isValInCache(address):
+            numStalls += cache_level.accessLatency
+            cache_level.updateCounter(address)
+            break

@@ -1,6 +1,7 @@
+import re
+from globalVariables import *
+from main import caches, _accessRegister
 
-
-instructions = [i for i in range(1, 5)]
 
 
 class Module:
@@ -64,7 +65,36 @@ def nextState(nextInstruction):
         If.instruction = nextInstruction
         If.state = True
 
-    
+    flagTwo = False
+    instruction = Mem.instruction
+    if instruction:
+        loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\w+)")
+        matches = loadInstruction.match(instruction)
+        if matches:
+            try:
+                hexAddress = data[matches.group(2)]
+            except KeyError:
+                print("Variable does not exist")
+                exit(1)
+            address = f"{int(hexAddress, base=16):012b}"
+            for cache_level in caches:
+                if cache_level.isValInCache(address):
+                    numStalls += cache_level.accessLatency
+                    cache_level.updateCounter(address)
+                    flagTwo = True
+                    break
+        loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\d+)\((\$\w\d+)\)")
+        matches = loadInstruction.match(instruction)
+        if matches:
+            address = _accessRegister(matches.group(3))
+            for cache_level in caches:
+                if cache_level.isValInCache(address):
+                    numStalls += cache_level.accessLatency
+                    cache_level.updateCounter(address)
+                    flagTwo = True
+                    break
+        if not flagTwo:
+            numMainMemoryAccesses += 1
 
 
 def printStates():
@@ -87,6 +117,4 @@ while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or 
     states.append(tuple(i.instruction for i in modules))
     clock += 1
 
-print(clock)
-for state in states:
-    print(state)
+print(numMainMemoryAccesses)

@@ -1,5 +1,6 @@
 from reading_asm import getData, getInstructions
 import math
+import re
 
 REGISTER_SIZE = 32
 MEMORY_SIZE = 4096
@@ -18,7 +19,7 @@ memory = [0]*MEMORY_SIZE
 
 instructionSeq = []
 # path to the asm file
-path = "./bubbleSort.asm"
+path = "./add.asm"
 
 '''
 namedRegisters design:
@@ -58,9 +59,41 @@ for label in instructions.keys():
     instructions[label] = temp
 
 numMainMemoryAccesses = 0
+numStalls = 0
 
 def convertToBinary(i):
     return f"{i:032b}"
 
 def convertToDec(i):
     return int(str(i), base=2)
+
+def getRegisterIndex(reg):
+    '''
+    parameters: (str) register in the format "$<registerName>"
+    returns: (int) if the register exists
+            otherwise exits the program
+    '''
+    errorMessage = f"Unknown register {reg}"
+    pattern = re.compile(r"\$(\w)(\d+)")
+    match = pattern.match(reg)
+    if match:
+        try:
+            return namedRegisters[match.group(1)][int(match.group(2))]
+        except KeyError:
+            print(errorMessage)
+            exit(1)
+        except IndexError:
+            print(errorMessage)
+            exit(1)
+    else:
+        pattern = re.compile(r"\$(\w{2})")
+        match = pattern.match(reg)
+        if not match:
+            print(errorMessage)
+            exit(1)
+        try:
+            return namedRegisters[match.group(1)]
+        except KeyError:
+            print(errorMessage)
+            exit(1)
+

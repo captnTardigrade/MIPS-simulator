@@ -41,27 +41,6 @@ class Cache:
         self._numAccesses = 0
         self._numWrites = 0
 
-    def search(self, address):
-        '''
-        description:
-            searches for the given address in the cache
-        returns:
-            (list) the block if it is present in the cache
-            and false otherwise
-        '''
-        self._numAccesses += 1
-        tag, index, offset = self.getLocation(address)
-        theSet = self.cache[index]
-        try:
-            blockIndex = theSet[MagicNumbers.TAGS.value].index(tag)
-            if theSet[blockIndex][MagicNumbers.VALID.value] == 1:
-                self._numHits += 1
-                self.updateCounter(address)
-                return theSet[blockIndex][MagicNumbers.BLOCK.value][offset]
-            return False
-        except ValueError:
-            return False
-
     def updateCache(self, address, blockIndex):
         '''
         description:
@@ -73,7 +52,7 @@ class Cache:
 
         returns: None
         '''
-        globalVariables.totalCacheAccesses += 1
+        # globalVariables.totalCacheAccesses += 1
         tag, index, offset = self.getLocation(address)
         self.cache[index][blockIndex][MagicNumbers.TAGS.value] = tag
         self.cache[index][blockIndex][MagicNumbers.BLOCK.value] = self.getBlock(
@@ -109,7 +88,7 @@ class Cache:
             (list) block starting at the given address
         '''
         start = int(address, base=2)
-        return globalVariables.memory[start:start+self.blockSize*globalVariables.INT_SIZE:globalVariables.INT_SIZE]
+        return globalVariables.memory[(start//globalVariables.INT_SIZE)*globalVariables.INT_SIZE:(start//globalVariables.INT_SIZE)+self.blockSize*globalVariables.INT_SIZE:globalVariables.INT_SIZE]
 
     def isFull(self, index):
         '''
@@ -128,7 +107,7 @@ class Cache:
     def _getBlockIndex(self, address):
         tag, index, offset = self.getLocation(address)
         for blockIndex in range(self.associativity):
-            if self.cache[index][blockIndex][MagicNumbers.ADDRESS] == address:
+            if self.cache[index][blockIndex][MagicNumbers.ADDRESS.value] == address:
                 return blockIndex
 
         return -1
@@ -152,9 +131,10 @@ class Cache:
         returns:
             None
         '''
+        self._numAccesses += 1
         tag, index, offset = self.getLocation(address)
         # if the block is not in the cache
-        if not self.search(address):
+        if not self.isValInCache(address):
             if self.isFull(index):
                 # if the block is full, find the least recently used one
                 # and replace it
@@ -183,17 +163,14 @@ class Cache:
                 self.updateCache(address, emptyBlock)
         else:
             # find the blockIndex and update its counter
-            blockIndex = 0
-            for b in range(len(self.cache[index])):
-                if self.cache[index][b][MagicNumbers.TAGS.value] == tag:
-                    blockIndex = b
-                    break
             self.updateCounter(address)
 
     def isValInCache(self, address):
         tag, index, offset = self.getLocation(address)
+        self.incrementNumAccesses()
         for b in range(len(self.cache[index])):
-            if self.cache[index][b][MagicNumbers.TAGS.value] == tag:
+            if globalVariables.convertToDec(self.cache[index][b][MagicNumbers.VALID.value]) and globalVariables.convertToDec(self.cache[index][b][MagicNumbers.ADDRESS.value]) <= globalVariables.convertToDec(address) <= globalVariables.convertToDec(self.cache[index][b][MagicNumbers.ADDRESS.value]) + self.blockSize:
+                self._numHits += 1
                 return True
         return False
 
@@ -202,10 +179,16 @@ class Cache:
 
     def getNumAccesses(self):
         return self._numAccesses
+    
+    def incrementNumAccesses(self):
+        self._numAccesses += 1
 
     def getNumWrites(self):
         return self._numWrites
 
 
 if __name__ == "__main__":
-    l1 = Cache(4, 256, 4, 2, 1)
+    l1 = Cache(4, 256, 2, 2, 1)
+    l1.LeastRecentlyUsed(f"{0:012b}")
+    l1.LeastRecentlyUsed(f"{5:012b}")
+    print(l1.isValInCache(f"{0:012b}"))
