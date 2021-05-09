@@ -17,26 +17,29 @@ registers = {instruction: [0 for _ in range(
 
 for i in instructions:
     loadPattern = re.compile(
-        r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\d*\(\$([a-z][0-9])\)")
+    r"lw[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
     branchPattern = re.compile(
         r"\w{3}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(\w+)")
     pattern = re.compile(
-        r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])")
+        r"\w{2,4}[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*\$([a-z][0-9])[ \t]*,[ \t]*(.*)")
     matches = loadPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 2
+        if "$" in matches.group(2):
+            temp = re.compile(r"(\d+)\((\$(\w)(\d+|\w+))\)")
+            if temp.match(matches.group(2)).group(2) and temp.match(matches.group(2)).group(2) != "$zero":
+                registers[i][getRegisterIndex(temp.match(matches.group(2)).group(2))] = 1
+    matches = pattern.match(i)
+    if matches:
         registers[i][int(matches.group(2)[1:])] = 1
-
+        registers[i][int(matches.group(1)[1:])] = 2
+        if "$" in matches.group(3):
+            if matches.group(3) != "$zero":
+                registers[i][getRegisterIndex(matches.group(3))] = 1
     matches = branchPattern.match(i)
     if matches:
         registers[i][int(matches.group(1)[1:])] = 1
         registers[i][int(matches.group(2)[1:])] = 1
-
-    matches = pattern.match(i)
-    if matches:
-        registers[i][int(matches.group(1)[1:])] = 2
-        registers[i][int(matches.group(2)[1:])] = 1
-        registers[i][int(matches.group(3)[1:])] = 1
 
 
 class Module:
@@ -127,29 +130,51 @@ def nextState():
         If.instruction = instructionBuffer.pop(0)
         _buffer.append(If.instruction)
 
-    loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\w+)")
-    matches = loadInstruction.match(instruction)
-    if matches:
-        try:
-            hexAddress = data[matches.group(2)]
-        except KeyError:
-            print("Variable does not exist")
-            exit(1)
-        address = f"{int(hexAddress, base=16):012b}"
-        for cache_level in caches:
-            if cache_level.isValInCache(address):
-                numStalls += cache_level.accessLatency
-                cache_level.updateCounter(address)
-                break
-    loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*(\d+)\((\$\w\d+)\)")
-    matches = loadInstruction.match(instruction)
-    if matches:
-        address = _accessRegister(matches.group(3))
-        for cache_level in caches:
-            if cache_level.isValInCache(address):
-                numStalls += cache_level.accessLatency
-                cache_level.updateCounter(address)
-                break
+    flagTwo = False
+    matchFlag = False
+    instruction = Mem.instruction
+    if instruction:
+        loadInstruction = re.compile(r"lw[ \t]+(\$\w+)[ \t]*,[ \t]*(\d+)\((\$\w+)\)")
+        matches = loadInstruction.match(instruction)
+        if matches:
+            matchFlag = True
+            address = _accessRegister(matches.group(3))
+            for cache_level in caches:
+                numStalls += cache_level.accessLatency - 1
+                if cache_level.isValInCache(address):
+                    cache_level.updateCounter(address)
+                    cache_level.LeastRecentlyUsed(address)
+                    flagTwo = True
+                    break
+        if not matchFlag:
+            loadInstruction = re.compile(r"lw[\t ]+\$(\w+)[\t ]*,[\t ]*\$?(\w+)")
+            matches = loadInstruction.match(instruction)
+            if matches:
+                try:
+                    hexAddress = data[matches.group(2)]
+                except KeyError:
+                    print(f"Variable {matches.group(2)} does not exist")
+                    exit(1)
+                address = f"{int(hexAddress, base=16):012b}"
+                for cache_level in caches:
+                    numStalls += cache_level.accessLatency - 1
+                    if cache_level.isValInCache(address):
+                        cache_level.updateCounter(address)
+                        cache_level.LeastRecentlyUsed(address)
+                        flagTwo = True
+                        break
+        
+        if not flagTwo:
+            numMainMemoryAccesses += 1
+
+states = []
+nextState()
+states.append([(i.state, i.instruction) for i in modules])
+clock = 0
+while (If.instruction or Id.instruction or Ex.instruction or Mem.instruction or Wb.instruction):
+    nextState()
+    states.append([(i.state, i.instruction) for i in modules])
+    clock += 1
 
 
 states = []
